@@ -4,7 +4,6 @@ namespace CustomSidebarManager;
 
 use App\Classes\Sidebar;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\HtmlString;
 
 class CustomSidebarBlock extends Sidebar
 {
@@ -45,6 +44,6 @@ class CustomSidebarBlock extends Sidebar
 
     public function getSuffixName(): ?string
     {
-        return new HtmlString('<span class="text-gray-500">(Custom Sidebar)</span>');
+        return '<span class="text-gray-500">(Custom Sidebar)</span>';
     }
 }
