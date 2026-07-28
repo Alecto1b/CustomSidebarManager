@@ -4,19 +4,25 @@ namespace CustomSidebarManager;
 
 use App\Classes\Plugin;
 use App\Facades\SidebarFacade;
-use CustomSidebarManager\CustomSidebarBlock;
 use CustomSidebarManager\Pages\CustomSidebarManagerPage;
-use Filament\Facades\Filament;
+use CustomSidebarManager\Support\CustomSidebarStore;
 use Filament\Panel;
 
 class CustomSidebarManagerPlugin extends Plugin
 {
     public function boot()
     {
-        $customBlocks = collect($this->getSetting('custom_sidebars', []))
-            ->map(fn ($sidebar) => new CustomSidebarBlock($sidebar['id'], $sidebar['name'], $sidebar['content'], $sidebar['show_name'] ?? false));
-    
-        SidebarFacade::register($customBlocks->toArray());
+        $customBlocks = array_map(
+            fn (array $sidebar): CustomSidebarBlock => new CustomSidebarBlock(
+                (string) $sidebar['id'],
+                (string) $sidebar['name'],
+                $sidebar['content'],
+                (bool) $sidebar['show_name'],
+            ),
+            (new CustomSidebarStore($this))->rowsForRegistration(),
+        );
+
+        SidebarFacade::register($customBlocks);
     }
 
     public function onPanel(Panel $panel): void
@@ -30,9 +36,8 @@ class CustomSidebarManagerPlugin extends Plugin
     {
         try {
             return CustomSidebarManagerPage::getUrl();
-        } catch (\Throwable $th) {
+        } catch (\Throwable) {
             return null;
         }
-
     }
 }

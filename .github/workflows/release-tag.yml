@@ -18,13 +18,13 @@ jobs:
         php-version: '8.1'
         extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, dom, filter, gd, iconv, json, mbstring, pdo
     
-    - name: Install PHP dependencies
-      run: composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --optimize-autoloader
+    - name: Validate composer.json
+      run: composer validate --no-check-all --no-check-lock --strict
     
     - name: Prepare repository in a single folder with repository name
       run: |
         mkdir -p ./release/${{ github.event.repository.name }}
-        rsync -av --progress ./ ./release/${{ github.event.repository.name }} --exclude release --exclude .git --exclude node_modules --exclude tests --exclude .github
+        rsync -av --progress ./ ./release/${{ github.event.repository.name }} --exclude release --exclude .git --exclude .gitignore --exclude node_modules --exclude tests --exclude .github --exclude composer.lock
     
     - name: Create zip archive
       run: |

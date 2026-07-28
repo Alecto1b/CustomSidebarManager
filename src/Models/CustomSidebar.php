@@ -3,6 +3,7 @@
 namespace CustomSidebarManager\Models;
 
 use App\Facades\Plugin;
+use CustomSidebarManager\Support\CustomSidebarStore;
 use Illuminate\Database\Eloquent\Model;
 use Sushi\Sushi;
 
@@ -15,17 +16,17 @@ class CustomSidebar extends Model
     protected $keyType = 'string';
 
     protected $schema = [
-        'id' => 'integer',
+        'id' => 'string',
         'name' => 'string',
         'show_name' => 'boolean',
         'content' => 'string',
     ];
 
-    public function getRows()
+    public function getRows(): array
     {
         $plugin = Plugin::getPlugin('CustomSidebarManager');
 
-        return $plugin->getSetting('custom_sidebars', []);
+        return (new CustomSidebarStore($plugin))->rowsForModel();
     }
 
     protected function sushiShouldCache()
