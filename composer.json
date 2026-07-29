@@ -13,8 +13,6 @@
         }
     ],
     "require": {
-        "php": "^8.1",
-        "filament/filament": "^3.0 || ^5.0",
-        "laravel/framework": "^10.0 || ^13.0"
+        "php": "^8.1"
     }
 }
