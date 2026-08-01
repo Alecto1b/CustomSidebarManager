@@ -1,61 +1,52 @@
-name: Build & Draft Release
+name: Release Tag
 
 on:
   push:
     tags:
       - '*.*.*'
 
-jobs:
-  build-and-release:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.1'
-        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, dom, filter, gd, iconv, json, mbstring, pdo
-    
-    - name: Validate composer.json
-      run: composer validate --no-check-all --no-check-lock --strict
-    
-    - name: Prepare repository in a single folder with repository name
-      run: |
-        mkdir -p ./release/${{ github.event.repository.name }}
-        rsync -av --progress ./ ./release/${{ github.event.repository.name }} --exclude release --exclude .git --exclude .gitignore --exclude node_modules --exclude tests --exclude .github --exclude composer.lock
-    
-    - name: Create zip archive
-      run: |
-        cd release
-        zip -r plugin.zip ./${{ github.event.repository.name }}
-        ls -l plugin.zip
-        if [ ! -f plugin.zip ]; then
-          echo "Error: plugin.zip was not created"
-          exit 1
-        fi
-    
-    - name: Create Release
-      id: create_release
-      uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref_name }}
-        name: ${{ github.ref_name }}
-        draft: true
-        prerelease: false
-        generate_release_notes: true
+permissions:
+  contents: write
 
-    
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./release/plugin.zip
-        asset_name: ${{github.event.repository.name}}-${{ github.ref_name }}.zip
-        asset_content_type: application/zip
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Validate composer.json
+        run: composer validate --no-check-publish
+
+      - name: PHP Lint
+        run: |
+          php -l index.php
+          find src -name "*.php" -exec php -l {} \;
+
+      - name: Install dependencies
+        run: composer install --no-dev --no-interaction --no-progress --optimize-autoloader
+
+      - name: Build release archive
+        run: |
+          mkdir -p release/CustomSidebarManager
+          rsync -av --progress ./ release/CustomSidebarManager/ \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'tests' \
+            --exclude 'dist' \
+            --exclude 'release' \
+            --exclude 'archives'
+          cd release
+          zip -r plugin.zip CustomSidebarManager
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/plugin.zip

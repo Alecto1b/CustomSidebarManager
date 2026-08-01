@@ -13,7 +13,7 @@ class CustomSidebarBlock extends Sidebar
         public string $id,
         public string $name,
         public ?string $content = null,
-        public bool $showName = false, 
+        public bool $showName = false,
     ) {
     }
 

@@ -5,22 +5,30 @@ namespace CustomSidebarManager;
 use App\Classes\Plugin;
 use App\Facades\SidebarFacade;
 use CustomSidebarManager\Pages\CustomSidebarManagerPage;
-use CustomSidebarManager\Support\CustomSidebarStore;
 use Filament\Panel;
 
 class CustomSidebarManagerPlugin extends Plugin
 {
-    public function boot()
+    public function boot(): void
     {
-        $customBlocks = array_map(
-            fn (array $sidebar): CustomSidebarBlock => new CustomSidebarBlock(
-                (string) $sidebar['id'],
-                (string) $sidebar['name'],
-                $sidebar['content'],
-                (bool) $sidebar['show_name'],
-            ),
-            (new CustomSidebarStore($this))->rowsForRegistration(),
-        );
+        $customSidebars = $this->getSetting('custom_sidebars', []);
+        if (! is_array($customSidebars)) {
+            $customSidebars = [];
+        }
+
+        $customBlocks = [];
+        foreach ($customSidebars as $sidebar) {
+            if (! is_array($sidebar) || empty($sidebar['id'])) {
+                continue;
+            }
+
+            $customBlocks[] = new CustomSidebarBlock(
+                id: (string) $sidebar['id'],
+                name: (string) ($sidebar['name'] ?? ''),
+                content: isset($sidebar['content']) ? (string) $sidebar['content'] : null,
+                showName: (bool) ($sidebar['show_name'] ?? false),
+            );
+        }
 
         SidebarFacade::register($customBlocks);
     }
@@ -34,6 +42,10 @@ class CustomSidebarManagerPlugin extends Plugin
 
     public function getPluginPage(): ?string
     {
+        if (! auth()->user()?->can('viewAny', \App\Models\Plugin::class)) {
+            return null;
+        }
+
         try {
             return CustomSidebarManagerPage::getUrl();
         } catch (\Throwable) {

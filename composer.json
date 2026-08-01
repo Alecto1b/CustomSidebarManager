@@ -1,7 +1,5 @@
 {
     "name": "leconfe/custom-sidebar-manager",
-    "description": "Create your own custom sidebar to display in frontpage",
-    "license": "MIT",
     "autoload": {
         "psr-4": {
             "CustomSidebarManager\\": "src/"
@@ -13,6 +11,6 @@
         }
     ],
     "require": {
-        "php": "^8.1"
+        "php": "^8.3"
     }
 }
